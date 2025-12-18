@@ -116,8 +116,17 @@ async function handleCreateMedication(event: APIGatewayProxyEvent): Promise<APIG
 
 async function handleUpdateMedication(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
-    const req = parseRequest(event);
-    const { id } = req.pathParams;
+    // Extract medication name from path: /medications/{name}
+    let path = event.path || "";
+    if (path.includes("/prod/") || path.includes("/dev/")) {
+      path = path.split("/").slice(2).join("/");
+    }
+    if (!path.startsWith("/")) {
+      path = `/${path}`;
+    }
+
+    const match = path.match(/^\/medications\/([^/]+)$/);
+    const id = match ? decodeURIComponent(match[1]) : null;
 
     if (!id) {
       return createErrorResponse(400, "Missing medication name");
@@ -147,8 +156,18 @@ async function handleUpdateMedication(event: APIGatewayProxyEvent): Promise<APIG
 
 async function handleMarkDoseTaken(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
-    const req = parseRequest(event);
-    const { id, doseId: nextDoseTimeStr } = req.pathParams;
+    // Extract medication name and dose ID from path: /medications/{name}/doses/{doseId}/taken
+    let path = event.path || "";
+    if (path.includes("/prod/") || path.includes("/dev/")) {
+      path = path.split("/").slice(2).join("/");
+    }
+    if (!path.startsWith("/")) {
+      path = `/${path}`;
+    }
+
+    const match = path.match(/^\/medications\/([^/]+)\/doses\/([^/]+)\/taken$/);
+    const id = match ? decodeURIComponent(match[1]) : null;
+    const nextDoseTimeStr = match ? match[2] : null;
 
     if (!id || !nextDoseTimeStr) {
       return createErrorResponse(400, "Missing medication name or next dose time");

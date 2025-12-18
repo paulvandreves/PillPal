@@ -32,13 +32,13 @@ export async function createMedication(data: CreateMedicationRequest): Promise<{
 }
 
 export async function updateMedication(medicationName: string): Promise<{ medication: Medication }> {
-  return request<{ medication: Medication }>(`/medications/${medicationName}`, {
+  return request<{ medication: Medication }>(`/medications/${encodeURIComponent(medicationName)}`, {
     method: "PUT",
   });
 }
 
 export async function markDoseTaken(medicationName: string, nextDoseTime: string): Promise<{ medication: Medication }> {
-  return request<{ medication: Medication }>(`/medications/${medicationName}/doses/${nextDoseTime}/taken`, {
+  return request<{ medication: Medication }>(`/medications/${encodeURIComponent(medicationName)}/doses/${nextDoseTime}/taken`, {
     method: "POST",
   });
 }

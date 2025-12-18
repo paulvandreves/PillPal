@@ -26,7 +26,6 @@ graph TB
 
 - **React 18+** with TypeScript
 - **Vite** - Build tool and dev server
-- **Tailwind CSS** - Utility-first CSS framework
 - **React Router** - Client-side routing (if needed)
 
 ### Backend

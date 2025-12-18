@@ -159,7 +159,9 @@ resource "aws_api_gateway_integration" "root_lambda" {
 resource "aws_api_gateway_deployment" "api" {
   depends_on = [
     aws_api_gateway_integration.lambda,
-    aws_api_gateway_integration.root_lambda
+    aws_api_gateway_integration.root_lambda,
+    aws_api_gateway_integration.options_proxy,
+    aws_api_gateway_integration.options_root
   ]
 
   rest_api_id = aws_api_gateway_rest_api.api.id
@@ -171,6 +173,10 @@ resource "aws_api_gateway_deployment" "api" {
       aws_api_gateway_integration.lambda.id,
       aws_api_gateway_method.root.id,
       aws_api_gateway_integration.root_lambda.id,
+      aws_api_gateway_method.options_proxy.id,
+      aws_api_gateway_integration.options_proxy.id,
+      aws_api_gateway_method.options_root.id,
+      aws_api_gateway_integration.options_root.id,
     ]))
   }
 
@@ -196,6 +202,11 @@ resource "aws_lambda_permission" "api_gateway" {
 }
 
 # CORS configuration for API Gateway
+# WARNING: The wildcard ('*') CORS configuration below allows requests from ANY origin.
+# For production environments, you should:
+# 1. Replace '*' with specific allowed origins (e.g., 'https://yourdomain.com')
+# 2. Implement origin validation in your Lambda function
+
 resource "aws_api_gateway_method" "options_proxy" {
   rest_api_id   = aws_api_gateway_rest_api.api.id
   resource_id   = aws_api_gateway_resource.proxy.id
@@ -240,7 +251,56 @@ resource "aws_api_gateway_integration_response" "options_proxy" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'" # SECURITY RISK: Allows any origin
+  }
+}
+
+# CORS configuration for root path
+resource "aws_api_gateway_method" "options_root" {
+  rest_api_id   = aws_api_gateway_rest_api.api.id
+  resource_id   = aws_api_gateway_rest_api.api.root_resource_id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_root" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_rest_api.api.root_resource_id
+  http_method = aws_api_gateway_method.options_root.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "options_root" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_rest_api.api.root_resource_id
+  http_method = aws_api_gateway_method.options_root.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_root" {
+  rest_api_id = aws_api_gateway_rest_api.api.id
+  resource_id = aws_api_gateway_rest_api.api.root_resource_id
+  http_method = aws_api_gateway_method.options_root.http_method
+  status_code = aws_api_gateway_method_response.options_root.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'" # SECURITY RISK: Allows any origin
   }
 }
 

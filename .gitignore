@@ -40,3 +40,5 @@ lerna-debug.log*
 # Vitest
 .vitest/
 package-lock.json
+terraform/tfplan
+terraform/tfplan

@@ -1,11 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["ESNext"],
+    "target": "ES2022",
+    "lib": ["ES2022"],
     "rootDir": "./functions",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "types": ["node", "aws-lambda"],
     "strict": true,

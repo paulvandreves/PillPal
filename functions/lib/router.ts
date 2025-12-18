@@ -62,13 +62,17 @@ export function parseRequest(event: APIGatewayProxyEvent): ParsedRequest {
 }
 
 export function createResponse(statusCode: number, body: unknown, headers: Record<string, string> = {}): APIGatewayProxyResult {
+  // WARNING: Wildcard CORS configuration below allows requests from ANY origin.
+  // In a production environment, you should:
+  // 1. Replace '*' with specific allowed origins (e.g., 'https://yourdomain.com')
   return {
     statusCode,
     headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type,Authorization",
+      "Access-Control-Allow-Origin": "*", // SECURITY RISK: Allows any origin in production
+      "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
       "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+      "Access-Control-Allow-Credentials": "false",
       ...headers,
     },
     body: JSON.stringify(body),

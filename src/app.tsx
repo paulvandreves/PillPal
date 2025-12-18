@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import "./app.css";
 import MedicationForm from "./components/medication-form";
 import MedicationList from "./components/medication-list";
 
@@ -11,14 +12,34 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8 text-center text-gray-800">PillPal</h1>
-        <div className="mb-8">
-          <MedicationForm onSuccess={handleMedicationAdded} onCancel={() => {}} />
+    <div className="app-container">
+      <header className="hero-section">
+        <h1 className="hero-title">💊 PillPal</h1>
+        <p className="hero-subtitle">Your Personal Medication Manager</p>
+        <p className="hero-description">
+          Stay on top of your health with smart medication tracking and timely reminders
+        </p>
+      </header>
+
+      <div className="content-grid">
+        <div className="card">
+          <h2 className="card-title">
+            <span className="icon">➕</span>
+            Add Medication
+          </h2>
+          <MedicationForm onMedicationAdded={handleMedicationAdded} />
         </div>
-        <MedicationList key={refreshKey} />
+
+        <div className="card full-width-card">
+          <h2 className="card-title">
+            <span className="icon">📋</span>
+            Your Medications
+          </h2>
+          <MedicationList key={refreshKey} />
+        </div>
       </div>
+
+
     </div>
   );
 }

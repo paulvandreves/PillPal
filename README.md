@@ -182,3 +182,15 @@ PillPal/
 ├── vite.config.ts          # Vite configuration
 └── package.json            # Dependencies and scripts
 ```
+
+## Design Decisions & Trade-offs
+
+### Architecture Choices
+
+- **Single Lambda Function** - All routes handled by one function with internal routing. Simpler deployment and lower cold start overhead vs. multiple functions.
+- **DynamoDB over RDS** - Chose NoSQL for faster queries, lower cost (pay-per-request), and simpler Schema design
+
+### Implementation Simplifications
+
+- **24-hour time format only** - Simplified scheduling to hour-based (0-23) instead of supporting minutes or AM/PM. 
+- **Single client/tenant** - Hardcoded "client" partition key to show intent for multitenant design

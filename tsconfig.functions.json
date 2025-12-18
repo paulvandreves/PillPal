@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ESNext"],
+    "rootDir": "./functions",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "types": ["node", "aws-lambda"],
+    "strict": true,
+    "outDir": "./dist/functions",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["functions/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

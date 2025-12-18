@@ -9,7 +9,7 @@ function loadEnvFile() {
     const envPath = path.resolve(__dirname, ".env");
     const envContent = readFileSync(envPath, "utf-8");
     const envVars: Record<string, string> = {};
-    
+
     envContent.split("\n").forEach((line) => {
       const trimmedLine = line.trim();
       if (trimmedLine && !trimmedLine.startsWith("#")) {
@@ -19,7 +19,7 @@ function loadEnvFile() {
         }
       }
     });
-    
+
     return envVars;
   } catch (error) {
     console.warn("Could not load .env file for tests:", error);

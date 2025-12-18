@@ -2,34 +2,74 @@ import type { Dose } from "../types";
 
 type DoseCardProps = {
   dose: Dose;
-  medicationId: string;
-  onMarkTaken: (medicationId: string, doseId: string) => void;
+  medicationName: string;
+  schedule: number; // Hour in 24-hour format (0-23)
+  onMarkTaken: (medicationName: string, nextDoseTime: string) => void;
 };
 
-export default function DoseCard({ dose, medicationId, onMarkTaken }: DoseCardProps) {
+export default function DoseCard({ dose, medicationName, schedule, onMarkTaken }: DoseCardProps) {
   const isTaken = dose.lastTaken !== undefined && dose.lastTaken > 0;
-  const takenDate = isTaken && dose.lastTaken ? new Date(dose.lastTaken * 1000).toLocaleString() : null;
+
+  // Convert Unix timestamp to formatted local date (without time)
+  const formatDate = (timestamp: number): string => {
+    const date = new Date(timestamp * 1000);
+
+    // Format: "Jan 15, 2024"
+    const options: Intl.DateTimeFormatOptions = {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    };
+
+    return date.toLocaleDateString("en-US", options);
+  };
+
+  // Format schedule hour as 24-hour time
+  const formatScheduleTime = (hour: number): string => {
+    return `${hour.toString().padStart(2, "0")}:00`;
+  };
+
+  const nextDoseDate = formatDate(dose.nextDoseTime);
+  const scheduleTime = formatScheduleTime(schedule);
+  const takenDate = isTaken && dose.lastTaken ? formatDate(dose.lastTaken) : null;
 
   return (
-    <div className="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
-      <div>
-        <span className="font-medium">
-          Dose
-          {dose.doseId}
+    <div className="dose-card">
+      <div className="dose-info">
+        <span className="dose-id">
+          Next dose:
+          {" "}
+          {nextDoseDate}
+          {" "}
+          at
+          {" "}
+          {scheduleTime}
         </span>
         {isTaken && takenDate && (
-          <span className="ml-2 text-sm text-green-600">
-            Taken:
-            {takenDate}
+          <span className="dose-taken">
+            ✓ Taken
+            <span className="dose-taken-time">
+              on
+              {" "}
+              {takenDate}
+            </span>
           </span>
         )}
       </div>
       {!isTaken && (
-        <button type="button" onClick={() => onMarkTaken(medicationId, dose.doseId)} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
+        <button
+          type="button"
+          onClick={() => onMarkTaken(medicationName, String(dose.nextDoseTime))}
+          className="btn-mark-taken"
+        >
           Mark as Taken
         </button>
       )}
-      {isTaken && <span className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm">✓ Taken</span>}
+      {isTaken && (
+        <span className="badge-taken">
+          ✓ Completed
+        </span>
+      )}
     </div>
   );
 }

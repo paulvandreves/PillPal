@@ -1,21 +1,21 @@
 export type Medication = {
-  medicationId: string;
   name: string;
-  schedule: string;
+  schedule: number; // Hour in 24-hour format (0-23)
   recurrence: "daily" | "weekly";
   active: boolean;
   createdAt: number;
+  nextDoseTime: number;
   doses: Dose[];
 };
 
 export type Dose = {
-  doseId: string;
+  nextDoseTime: number;
   takentimestamp: number;
   lastTaken?: number;
 };
 
 export type CreateMedicationRequest = {
   name: string;
-  schedule: string;
+  schedule: number; // Hour in 24-hour format (0-23)
   recurrence: "daily" | "weekly";
 };

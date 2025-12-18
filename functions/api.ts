@@ -1,26 +1,29 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 
-import { createMedication, markDoseTaken, queryMedications, updateMedication } from "./lib/dynamodb";
+import { createMedication, markDoseTaken, queryMedications, updateMedication, validateScheduleFormat } from "./lib/dynamodb";
 import { createErrorResponse, createResponse, parseRequest } from "./lib/router";
 
 async function handleListMedications(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
     const req = parseRequest(event);
     const activeOnly = req.queryParams.activeOnly !== "false";
+
+    // Query medications - they're now automatically sorted by nextDoseTime due to sortKey structure
     const medications = await queryMedications("client", activeOnly);
 
-    // Group by medicationId and format response
+    // Group by medication name and format response
+    // New sortKey format: nextDoseTime:name:takentimestamp
     const grouped: Record<
       string,
       {
-        medicationId: string;
         name: string;
-        schedule: string;
+        schedule: number;
         recurrence: "daily" | "weekly";
         active: boolean;
         createdAt: number;
+        nextDoseTime: number;
         doses: Array<{
-          doseId: string;
+          nextDoseTime: number;
           takentimestamp: number;
           lastTaken?: number;
         }>;
@@ -28,33 +31,32 @@ async function handleListMedications(event: APIGatewayProxyEvent): Promise<APIGa
     > = {};
     medications.forEach((med) => {
       const parts = med.sortKey.split(":");
-      const medicationId = parts[0];
+      const nextDoseTime = Number.parseInt(parts[0]) || 0;
+      const name = parts[1];
+      const takentimestamp = parts.length >= 3 ? Number.parseInt(parts[2]) || 0 : 0;
 
-      if (!grouped[medicationId]) {
-        grouped[medicationId] = {
-          medicationId,
+      if (!grouped[name]) {
+        grouped[name] = {
           name: med.name,
           schedule: med.schedule,
           recurrence: med.recurrence,
           active: med.active,
           createdAt: med.createdAt,
+          nextDoseTime,
           doses: [],
         };
       }
 
-      if (parts.length >= 2) {
-        const doseId = parts[1];
-        const takentimestamp = parts.length >= 3 ? Number.parseInt(parts[2]) || 0 : 0;
-        grouped[medicationId].doses.push({
-          doseId,
-          takentimestamp,
-          lastTaken: med.lastTaken,
-        });
-      }
+      grouped[name].doses.push({
+        nextDoseTime,
+        takentimestamp,
+        lastTaken: med.lastTaken,
+      });
     });
 
     return createResponse(200, { medications: Object.values(grouped) });
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     console.error("Error listing medications:", error);
     return createErrorResponse(500, "Failed to list medications", error instanceof Error ? error.message : String(error));
   }
@@ -74,13 +76,36 @@ async function handleCreateMedication(event: APIGatewayProxyEvent): Promise<APIG
       return createErrorResponse(400, "Recurrence must be 'daily' or 'weekly'");
     }
 
-    const medication = await createMedication({
+    // Validate schedule format
+    const scheduleNum = Number(schedule);
+    if (!validateScheduleFormat(scheduleNum)) {
+      return createErrorResponse(
+        400,
+        "Invalid schedule format. Expected a number between 0-23 representing the hour in 24-hour format.",
+      );
+    }
+
+    const result = await createMedication({
       name: String(name),
-      schedule: String(schedule),
+      schedule: scheduleNum,
       recurrence: recurrence as "daily" | "weekly",
       active: true,
       createdAt: Math.floor(Date.now() / 1000),
     });
+
+    // Format response to match frontend expectations
+    const medication = {
+      name: result.name,
+      schedule: result.schedule,
+      recurrence: result.recurrence,
+      active: result.active,
+      createdAt: result.createdAt,
+      nextDoseTime: result.nextDoseTime,
+      doses: [{
+        nextDoseTime: result.nextDoseTime,
+        takentimestamp: 0,
+      }],
+    };
 
     return createResponse(201, { medication });
   } catch (error: unknown) {
@@ -95,12 +120,16 @@ async function handleUpdateMedication(event: APIGatewayProxyEvent): Promise<APIG
     const { id } = req.pathParams;
 
     if (!id) {
-      return createErrorResponse(400, "Missing medication ID");
+      return createErrorResponse(400, "Missing medication name");
     }
 
-    // Find the medication by querying and matching medicationId
+    // Find the medication by querying and matching medication name
+    // sortKey format: nextDoseTime:name:takentimestamp
     const medications = await queryMedications("client", false);
-    const medication = medications.find(m => m.sortKey.startsWith(`${id}:`));
+    const medication = medications.find((m) => {
+      const parts = m.sortKey.split(":");
+      return parts[1] === id;
+    });
 
     if (!medication) {
       return createErrorResponse(404, "Medication not found");
@@ -119,15 +148,21 @@ async function handleUpdateMedication(event: APIGatewayProxyEvent): Promise<APIG
 async function handleMarkDoseTaken(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
     const req = parseRequest(event);
-    const { id, doseId } = req.pathParams;
+    const { id, doseId: nextDoseTimeStr } = req.pathParams;
 
-    if (!id || !doseId) {
-      return createErrorResponse(400, "Missing medication ID or dose ID");
+    if (!id || !nextDoseTimeStr) {
+      return createErrorResponse(400, "Missing medication name or next dose time");
     }
 
-    // Find the medication
+    // Find the medication by name and nextDoseTime
+    // sortKey format: nextDoseTime:name:takentimestamp
     const medications = await queryMedications("client", false);
-    const medication = medications.find(m => m.sortKey.startsWith(`${id}:`) && m.sortKey.includes(`:${doseId}:`));
+    const medication = medications.find((m) => {
+      const parts = m.sortKey.split(":");
+      const nextDoseTime = parts[0];
+      const name = parts[1];
+      return name === id && nextDoseTime === String(Number.parseInt(nextDoseTimeStr)).padStart(15, "0");
+    });
 
     if (!medication) {
       return createErrorResponse(404, "Medication or dose not found");
@@ -136,7 +171,8 @@ async function handleMarkDoseTaken(event: APIGatewayProxyEvent): Promise<APIGate
     const updated = await markDoseTaken("client", medication.sortKey);
 
     return createResponse(200, { medication: updated });
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     console.error("Error marking dose as taken:", error);
     return createErrorResponse(500, "Failed to mark dose as taken", error instanceof Error ? error.message : String(error));
   }

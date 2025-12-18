@@ -11,7 +11,7 @@ type MedicationFormProps = {
 export default function MedicationForm({ onMedicationAdded }: MedicationFormProps) {
   const [formData, setFormData] = useState<CreateMedicationRequest>({
     name: "",
-    schedule: "",
+    schedule: 8, // Default to 8:00
     recurrence: "daily",
   });
   const [loading, setLoading] = useState(false);
@@ -24,7 +24,7 @@ export default function MedicationForm({ onMedicationAdded }: MedicationFormProp
 
     try {
       await createMedication(formData);
-      setFormData({ name: "", schedule: "", recurrence: "daily" });
+      setFormData({ name: "", schedule: 8, recurrence: "daily" });
       onMedicationAdded();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to create medication");
@@ -40,7 +40,7 @@ export default function MedicationForm({ onMedicationAdded }: MedicationFormProp
           {error}
         </div>
       )}
-      
+
       <div className="form-group">
         <label htmlFor="name" className="form-label">
           Medication Name
@@ -58,17 +58,21 @@ export default function MedicationForm({ onMedicationAdded }: MedicationFormProp
 
       <div className="form-group">
         <label htmlFor="schedule" className="form-label">
-          Schedule
+          Schedule (Hour)
         </label>
-        <input
-          type="text"
+        <select
           id="schedule"
-          required
           value={formData.schedule}
-          onChange={e => setFormData({ ...formData, schedule: e.target.value })}
-          placeholder="e.g., 8:00 AM, 2:00 PM"
-          className="form-input"
-        />
+          onChange={e => setFormData({ ...formData, schedule: Number.parseInt(e.target.value) })}
+          className="form-select"
+        >
+          {Array.from({ length: 24 }, (_, i) => i).map(hour => (
+            <option key={hour} value={hour}>
+              {hour.toString().padStart(2, "0")}
+              :00
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="form-group">

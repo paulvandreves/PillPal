@@ -7,9 +7,9 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+    "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -69,7 +69,9 @@ body {
   border-radius: 16px;
   padding: 2rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .card:hover {
@@ -180,7 +182,9 @@ body {
   border-radius: 8px;
   background: white;
   color: #2d3748;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .form-input:focus,
@@ -271,4 +275,202 @@ body {
   background: #fed7d7;
   color: #c53030;
   border: 1px solid #fc8181;
+}
+
+/* Loading & Empty States */
+.loading-container,
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.loading-text {
+  font-size: 1.1rem;
+  color: #4a5568;
+}
+
+.empty-state-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+  color: #718096;
+  font-size: 1rem;
+}
+
+/* Medication List Styles */
+.medication-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.medication-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 2px solid #e2e8f0;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.medication-card:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.medication-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.medication-info {
+  flex: 1;
+}
+
+.medication-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.medication-schedule {
+  color: #718096;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.badge-daily {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.badge-weekly {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.btn-deactivate {
+  padding: 0.5rem 1rem;
+  background: #f7fafc;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-deactivate:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+/* Dose Section */
+.dose-section {
+  margin-top: 1.25rem;
+}
+
+.dose-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.75rem;
+}
+
+.dose-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Dose Card Styles */
+.dose-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  gap: 1rem;
+}
+
+.dose-card:hover {
+  background: #edf2f7;
+}
+
+.dose-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dose-id {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 1rem;
+}
+
+.dose-taken {
+  font-size: 0.875rem;
+  color: #48bb78;
+  font-weight: 500;
+}
+
+.dose-taken-time {
+  color: #718096;
+  margin-left: 0.25rem;
+}
+
+.btn-mark-taken {
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+}
+
+.btn-mark-taken:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+}
+
+.badge-taken {
+  padding: 0.5rem 1rem;
+  background: #c6f6d5;
+  color: #22543d;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
 }

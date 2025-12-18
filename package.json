@@ -13,6 +13,7 @@
     "format:check": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:unit": "vitest run __tests__/dynamodb.test.ts",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage"
   },

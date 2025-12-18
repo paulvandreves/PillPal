@@ -8,7 +8,7 @@ const TABLE_NAME = process.env.TABLE_NAME || "";
 
 export type Medication = {
   client: string;
-  sortKey: string; // nextDoseTime:name:takentimestamp
+  sortKey: string; // nextDoseTime:name
   name: string;
   schedule: number; // Hour in 24-hour format (0-23)
   recurrence: "daily" | "weekly";
@@ -47,9 +47,9 @@ export async function createMedication(medication: Omit<Medication, "client" | "
     medication.recurrence,
   );
 
-  // New sortKey format: nextDoseTime:name:takentimestamp
+  // New sortKey format: nextDoseTime:name
   // Zero-pad nextDoseTime to ensure proper lexicographic sorting
-  const sortKey = `${String(nextDoseTime).padStart(15, "0")}:${medication.name}:0`;
+  const sortKey = `${String(nextDoseTime).padStart(15, "0")}:${medication.name}`;
 
   const item: Medication = {
     client: "client",
@@ -118,13 +118,12 @@ export async function markDoseTaken(clientId: string, sortKey: string) {
     lastTaken,
   );
 
-  // Parse current sortKey to get the name and increment takentimestamp
+  // Parse current sortKey to get the name
   const parts = sortKey.split(":");
   const name = parts[1];
-  const currentTakenCount = parts.length >= 3 ? Number.parseInt(parts[2]) || 0 : 0;
 
   // Create new sortKey with updated nextDoseTime
-  const newSortKey = `${String(newNextDoseTime).padStart(15, "0")}:${name}:${currentTakenCount + 1}`;
+  const newSortKey = `${String(newNextDoseTime).padStart(15, "0")}:${name}`;
 
   // Delete old item
   const deleteCommand = new DeleteCommand({

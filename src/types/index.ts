@@ -10,7 +10,6 @@ export type Medication = {
 
 export type Dose = {
   nextDoseTime: number;
-  takentimestamp: number;
   lastTaken?: number;
 };
 

@@ -176,8 +176,8 @@ describe("dynamodb - createMedication", () => {
     expect(Number.isNaN(result.nextDoseTime)).toBe(false);
     expect(result.nextDoseTime).toBeGreaterThan(0);
 
-    // Verify sortKey format: nextDoseTime:name:takentimestamp
-    expect(result.sortKey).toMatch(/^\d{15}:Aspirin:0$/);
+    // Verify sortKey format: nextDoseTime:name
+    expect(result.sortKey).toMatch(/^\d{15}:Aspirin$/);
 
     // Verify DynamoDB was called
     expect(mockSendFn).toHaveBeenCalledTimes(1);
@@ -199,7 +199,7 @@ describe("dynamodb - createMedication", () => {
     expect(result).toHaveProperty("nextDoseTime");
     expect(typeof result.nextDoseTime).toBe("number");
     expect(Number.isNaN(result.nextDoseTime)).toBe(false);
-    expect(result.sortKey).toMatch(/^\d{15}:Vitamin D:0$/);
+    expect(result.sortKey).toMatch(/^\d{15}:Vitamin D$/);
   });
 
   it("should create a weekly medication", async () => {
@@ -250,7 +250,7 @@ describe("dynamodb - markDoseTaken", () => {
     const clientId = "client";
     const medication = {
       client: clientId,
-      sortKey: "000001734537600:Aspirin:0",
+      sortKey: "000001734537600:Aspirin",
       name: "Aspirin",
       schedule: 8, // 08:00
       recurrence: "daily" as const,
@@ -275,40 +275,10 @@ describe("dynamodb - markDoseTaken", () => {
     // Verify the sortKey was updated
     expect(result.sortKey).not.toBe(medication.sortKey);
 
-    // Verify the taken counter was incremented
-    const newSortKeyParts = result.sortKey.split(":");
-    const takenCount = Number.parseInt(newSortKeyParts[2]);
-    expect(takenCount).toBe(1);
-
     // Verify DynamoDB operations were called (Query, Delete, Put)
     expect(mockSendFn).toHaveBeenCalledTimes(3);
   });
 
-  it("should increment taken counter when marking dose as taken multiple times", async () => {
-    const clientId = "client";
-    const medication = {
-      client: clientId,
-      sortKey: "000001734537600:Aspirin:5", // Already taken 5 times
-      name: "Aspirin",
-      schedule: 8, // 08:00
-      recurrence: "daily" as const,
-      active: true,
-      createdAt: Math.floor(Date.now() / 1000) - 86400,
-    };
-
-    mockSendFn
-      .mockResolvedValueOnce({
-        Items: [medication],
-      })
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({});
-
-    const result = await markDoseTaken(clientId, medication.sortKey);
-
-    const newSortKeyParts = result.sortKey.split(":");
-    const takenCount = Number.parseInt(newSortKeyParts[2]);
-    expect(takenCount).toBe(6);
-  });
 
   it("should calculate correct next dose time after taking current dose", async () => {
     const clientId = "client";
@@ -320,7 +290,7 @@ describe("dynamodb - markDoseTaken", () => {
 
     const medication = {
       client: clientId,
-      sortKey: "000001734537600:DailyMed:0",
+      sortKey: "000001734537600:DailyMed",
       name: "DailyMed",
       schedule: scheduleHour,
       recurrence: "daily" as const,
@@ -352,7 +322,7 @@ describe("dynamodb - markDoseTaken", () => {
 
   it("should throw error when medication is not found", async () => {
     const clientId = "client";
-    const sortKey = "000001734537600:NonExistent:0";
+    const sortKey = "000001734537600:NonExistent";
 
     mockSendFn.mockResolvedValueOnce({
       Items: [], // No medication found
@@ -372,7 +342,7 @@ describe("dynamodb - queryMedications", () => {
     const medications = [
       {
         client: "client",
-        sortKey: "000001734537600:Med1:0",
+        sortKey: "000001734537600:Med1",
         name: "Med1",
         schedule: 8, // 08:00
         recurrence: "daily",
@@ -381,7 +351,7 @@ describe("dynamodb - queryMedications", () => {
       },
       {
         client: "client",
-        sortKey: "000001734537700:Med2:0",
+        sortKey: "000001734537700:Med2",
         name: "Med2",
         schedule: 9, // 09:00
         recurrence: "daily",
@@ -405,7 +375,7 @@ describe("dynamodb - queryMedications", () => {
     const medications = [
       {
         client: "client",
-        sortKey: "000001734537600:Med1:0",
+        sortKey: "000001734537600:Med1",
         name: "Med1",
         schedule: 8, // 08:00
         recurrence: "daily",
@@ -414,7 +384,7 @@ describe("dynamodb - queryMedications", () => {
       },
       {
         client: "client",
-        sortKey: "000001734537700:Med2:0",
+        sortKey: "000001734537700:Med2",
         name: "Med2",
         schedule: 9, // 09:00
         recurrence: "daily",
@@ -436,7 +406,7 @@ describe("dynamodb - queryMedications", () => {
     const medications = [
       {
         client: "client",
-        sortKey: "000001734537600:Med1:0", // Earlier time
+        sortKey: "000001734537600:Med1", // Earlier time
         name: "Med1",
         schedule: 8, // 08:00
         recurrence: "daily",
@@ -445,7 +415,7 @@ describe("dynamodb - queryMedications", () => {
       },
       {
         client: "client",
-        sortKey: "000001734537800:Med2:0", // Later time
+        sortKey: "000001734537800:Med2", // Later time
         name: "Med2",
         schedule: 9, // 09:00
         recurrence: "daily",

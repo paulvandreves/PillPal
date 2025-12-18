@@ -12,7 +12,7 @@ async function handleListMedications(event: APIGatewayProxyEvent): Promise<APIGa
     const medications = await queryMedications("client", activeOnly);
 
     // Group by medication name and format response
-    // New sortKey format: nextDoseTime:name:takentimestamp
+    // New sortKey format: nextDoseTime:name
     const grouped: Record<
       string,
       {
@@ -24,7 +24,6 @@ async function handleListMedications(event: APIGatewayProxyEvent): Promise<APIGa
         nextDoseTime: number;
         doses: Array<{
           nextDoseTime: number;
-          takentimestamp: number;
           lastTaken?: number;
         }>;
       }
@@ -33,7 +32,6 @@ async function handleListMedications(event: APIGatewayProxyEvent): Promise<APIGa
       const parts = med.sortKey.split(":");
       const nextDoseTime = Number.parseInt(parts[0]) || 0;
       const name = parts[1];
-      const takentimestamp = parts.length >= 3 ? Number.parseInt(parts[2]) || 0 : 0;
 
       if (!grouped[name]) {
         grouped[name] = {
@@ -49,7 +47,6 @@ async function handleListMedications(event: APIGatewayProxyEvent): Promise<APIGa
 
       grouped[name].doses.push({
         nextDoseTime,
-        takentimestamp,
         lastTaken: med.lastTaken,
       });
     });
@@ -103,7 +100,6 @@ async function handleCreateMedication(event: APIGatewayProxyEvent): Promise<APIG
       nextDoseTime: result.nextDoseTime,
       doses: [{
         nextDoseTime: result.nextDoseTime,
-        takentimestamp: 0,
       }],
     };
 
@@ -133,7 +129,7 @@ async function handleUpdateMedication(event: APIGatewayProxyEvent): Promise<APIG
     }
 
     // Find the medication by querying and matching medication name
-    // sortKey format: nextDoseTime:name:takentimestamp
+    // sortKey format: nextDoseTime:name
     const medications = await queryMedications("client", false);
     const medication = medications.find((m) => {
       const parts = m.sortKey.split(":");
@@ -174,7 +170,7 @@ async function handleMarkDoseTaken(event: APIGatewayProxyEvent): Promise<APIGate
     }
 
     // Find the medication by name and nextDoseTime
-    // sortKey format: nextDoseTime:name:takentimestamp
+    // sortKey format: nextDoseTime:name
     const medications = await queryMedications("client", false);
     const medication = medications.find((m) => {
       const parts = m.sortKey.split(":");
